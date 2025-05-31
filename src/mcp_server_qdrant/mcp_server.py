@@ -32,6 +32,7 @@ class QdrantMCPServer(FastMCP):
         instructions: str | None = None,
         **settings: Any,
     ):
+        logging.info("[mcp_server.py] Initializing QdrantMCPServer...")
         self.tool_settings = tool_settings
         self.qdrant_settings = qdrant_settings
         self.embedding_provider_settings = embedding_provider_settings
@@ -48,8 +49,10 @@ class QdrantMCPServer(FastMCP):
         super().__init__(name=name, instructions=instructions, **settings)
 
         self.setup_tools()
+        logging.info("[mcp_server.py] QdrantMCPServer initialized and tools set up.")
 
     def format_entry(self, entry: Entry) -> str:
+        logging.info("[mcp_server.py] Formatting entry for output.")
         """
         Feel free to override this method in your subclass to customize the format of the entry.
         """
@@ -57,6 +60,7 @@ class QdrantMCPServer(FastMCP):
         return f"<entry><content>{entry.content}</content><metadata>{entry_metadata}</metadata></entry>"
 
     def setup_tools(self):
+        logging.info("[mcp_server.py] Setting up tools for QdrantMCPServer.")
         """
         Register the tools in the server.
         """
@@ -137,11 +141,12 @@ class QdrantMCPServer(FastMCP):
             name="qdrant-find",
             description=self.tool_settings.tool_find_description,
         )
+        logging.info("[mcp_server.py] Registered 'qdrant-find' tool.")
 
         if not self.qdrant_settings.read_only:
-            # Those methods can modify the database
             self.add_tool(
                 store_foo,
                 name="qdrant-store",
                 description=self.tool_settings.tool_store_description,
             )
+            logging.info("[mcp_server.py] Registered 'qdrant-store' tool.")

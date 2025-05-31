@@ -1,0 +1,50 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run mcp-server-qdrant",
+            "type": "python",
+            "request": "launch",
+            "module": "mcp_server_qdrant.main",
+            "justMyCode": true,
+            "args": [
+                "--transport",
+                "stdio"
+            ],
+            "env": {
+                "QDRANT_URL": "http://localhost:6333",
+                "COLLECTION_NAME": "default",
+                "EMBEDDING_MODEL": "sentence-transformers/all-MiniLM-L6-v2",
+                "FASTMCP_LOG_LEVEL": "DEBUG"
+            }
+        },
+        {
+            "name": "Run tests",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "justMyCode": false,
+            "args": [
+                "tests"
+            ]
+        },
+        {
+            "name": "Run mcp-server-qdrant (src as cwd)",
+            "type": "python",
+            "request": "launch",
+            "module": "mcp_server_qdrant.main",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/src",
+            "args": [
+                "--transport",
+                "sse"
+            ],
+            "env": {
+                "QDRANT_URL": "http://localhost:6333",
+                "COLLECTION_NAME": "default",
+                "EMBEDDING_MODEL": "sentence-transformers/all-MiniLM-L6-v2",
+                "FASTMCP_LOG_LEVEL": "DEBUG"
+            }
+        }
+    ]
+}

@@ -1,3 +1,4 @@
+import logging
 from mcp_server_qdrant.embeddings.base import EmbeddingProvider
 from mcp_server_qdrant.embeddings.types import EmbeddingProviderType
 from mcp_server_qdrant.settings import EmbeddingProviderSettings
@@ -9,6 +10,7 @@ def create_embedding_provider(settings: EmbeddingProviderSettings) -> EmbeddingP
     :param settings: The settings for the embedding provider.
     :return: An instance of the specified embedding provider.
     """
+    logging.info(f"[factory.py] Creating embedding provider: {settings.provider_type}, model: {settings.model_name}")
     if settings.provider_type == EmbeddingProviderType.FASTEMBED:
         from mcp_server_qdrant.embeddings.fastembed import FastEmbedProvider
 

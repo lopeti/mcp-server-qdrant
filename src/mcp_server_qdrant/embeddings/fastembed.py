@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import List
 
 from fastembed import TextEmbedding
@@ -14,11 +15,13 @@ class FastEmbedProvider(EmbeddingProvider):
     """
 
     def __init__(self, model_name: str):
+        logging.info(f"[fastembed.py] Initializing FastEmbedProvider with model: {model_name}")
         self.model_name = model_name
         self.embedding_model = TextEmbedding(model_name)
 
     async def embed_documents(self, documents: List[str]) -> List[List[float]]:
         """Embed a list of documents into vectors."""
+        logging.info(f"[fastembed.py] Embedding {len(documents)} documents with model: {self.model_name}")
         # Run in a thread pool since FastEmbed is synchronous
         loop = asyncio.get_event_loop()
         embeddings = await loop.run_in_executor(
@@ -28,6 +31,7 @@ class FastEmbedProvider(EmbeddingProvider):
 
     async def embed_query(self, query: str) -> List[float]:
         """Embed a query into a vector."""
+        logging.info(f"[fastembed.py] Embedding query with model: {self.model_name}")
         # Run in a thread pool since FastEmbed is synchronous
         loop = asyncio.get_event_loop()
         embeddings = await loop.run_in_executor(
@@ -40,11 +44,13 @@ class FastEmbedProvider(EmbeddingProvider):
         Return the name of the vector for the Qdrant collection.
         Important: This is compatible with the FastEmbed logic used before 0.6.0.
         """
+        logging.info(f"[fastembed.py] Getting vector name for model: {self.model_name}")
         model_name = self.embedding_model.model_name.split("/")[-1].lower()
         return f"fast-{model_name}"
 
     def get_vector_size(self) -> int:
         """Get the size of the vector for the Qdrant collection."""
+        logging.info(f"[fastembed.py] Getting vector size for model: {self.model_name}")
         model_description: DenseModelDescription = (
             self.embedding_model._get_model_description(self.model_name)
         )

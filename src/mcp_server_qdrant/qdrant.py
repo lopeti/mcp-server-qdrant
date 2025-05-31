@@ -40,6 +40,9 @@ class QdrantConnector:
         embedding_provider: EmbeddingProvider,
         qdrant_local_path: Optional[str] = None,
     ):
+        logging.info(
+            f"[qdrant.py] Initializing QdrantConnector with url={qdrant_url}, collection={collection_name}"
+        )
         self._qdrant_url = qdrant_url.rstrip("/") if qdrant_url else None
         self._qdrant_api_key = qdrant_api_key
         self._default_collection_name = collection_name
@@ -49,6 +52,7 @@ class QdrantConnector:
         )
 
     async def get_collection_names(self) -> list[str]:
+        logging.info("[qdrant.py] Fetching collection names from Qdrant server...")
         """
         Get the names of all collections in the Qdrant server.
         :return: A list of collection names.
@@ -57,6 +61,9 @@ class QdrantConnector:
         return [collection.name for collection in response.collections]
 
     async def store(self, entry: Entry, *, collection_name: Optional[str] = None):
+        logging.info(
+            f"[qdrant.py] Storing entry: {entry.content[:30]}... in collection: {collection_name or self._default_collection_name}"
+        )
         """
         Store some information in the Qdrant collection, along with the specified metadata.
         :param entry: The entry to store in the Qdrant collection.
@@ -89,6 +96,9 @@ class QdrantConnector:
     async def search(
         self, query: str, *, collection_name: Optional[str] = None, limit: int = 10
     ) -> list[Entry]:
+        logging.info(
+            f"[qdrant.py] Searching for query: '{query}' in collection: {collection_name or self._default_collection_name}, limit: {limit}"
+        )
         """
         Find points in the Qdrant collection. If there are no entries found, an empty list is returned.
         :param query: The query to use for the search.
@@ -126,6 +136,7 @@ class QdrantConnector:
         ]
 
     async def _ensure_collection_exists(self, collection_name: str):
+        logging.info(f"[qdrant.py] Ensuring collection exists: {collection_name}")
         """
         Ensure that the collection exists, creating it if necessary.
         :param collection_name: The name of the collection to ensure exists.
