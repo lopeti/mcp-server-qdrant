@@ -136,17 +136,27 @@ class QdrantMCPServer(FastMCP):
                 store_foo, {"collection_name": self.qdrant_settings.collection_name}
             )
 
-        self.add_tool(
-            find_foo,
-            name="qdrant-find",
-            description=self.tool_settings.tool_find_description,
-        )
-        logging.info("[mcp_server.py] Registered 'qdrant-find' tool.")
+        # --- Memory tools registration ---
+        from .memory import memory_query, memory_upsert
 
-        if not self.qdrant_settings.read_only:
-            self.add_tool(
-                store_foo,
-                name="qdrant-store",
-                description=self.tool_settings.tool_store_description,
-            )
-            logging.info("[mcp_server.py] Registered 'qdrant-store' tool.")
+        self.add_tool(
+            memory_query,
+            name="memory_query",
+            description=(
+                "Retrieve facts, notes, or memories previously taught to the assistant in conversations or explicit requests. "
+                "Not for real-time sensor or device state (use the entity API for that). "
+                "Example: Find out when the user last watered the plants, or what birthday message was set last month. "
+                "For current sensor or device values, use the Home Assistant entity API/tool, not this memory tool."
+            ),
+        )
+        self.add_tool(
+            memory_upsert,
+            name="memory_upsert",
+            description=(
+                "Store a new fact, event, or personal note for long-term memory. "
+                "Use for anything you want the assistant to remember in future conversations. "
+                "Not for real-time sensor/device values! "
+                "For current sensor or device values, use the Home Assistant entity API/tool, not this memory tool."
+            ),
+        )
+        logging.info("[mcp_server.py] Registered 'memory_query' and 'memory_upsert' tools.")

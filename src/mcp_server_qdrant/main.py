@@ -1,5 +1,6 @@
 import argparse
 import logging
+from . import memory
 
 
 def main():

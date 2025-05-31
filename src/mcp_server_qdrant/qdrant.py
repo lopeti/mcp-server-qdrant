@@ -19,6 +19,7 @@ class Entry(BaseModel):
 
     content: str
     metadata: Optional[Metadata] = None
+    score: Optional[float] = None  # relevancia vagy similarity score
 
 
 class QdrantConnector:
@@ -131,6 +132,7 @@ class QdrantConnector:
             Entry(
                 content=result.payload["document"],
                 metadata=result.payload.get("metadata"),
+                score=getattr(result, "score", None)  # relevancia score, ha van
             )
             for result in search_results.points
         ]
