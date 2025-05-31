@@ -10,4 +10,4 @@ mcp = QdrantMCPServer(
     qdrant_settings=QdrantSettings(),
     embedding_provider_settings=EmbeddingProviderSettings(),
 )
-app = mcp
+
