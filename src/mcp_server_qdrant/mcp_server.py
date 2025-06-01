@@ -1,6 +1,7 @@
 import logging
 from typing import Any, List, Optional
 
+from fastapi.responses import JSONResponse
 from fastmcp import Context, FastMCP
 
 from mcp_server_qdrant.embeddings.factory import create_embedding_provider
@@ -88,7 +89,7 @@ class QdrantMCPServer(FastMCP):
                     for entry in entries
                 ]
                 logger.info(f"[mcp_server.py] Returning response with {len(response)} items")
-                return response
+                return  response
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.exception(f"[mcp_server.py] Exception in memory_query_adapter: {str(e)}")
@@ -148,6 +149,32 @@ class QdrantMCPServer(FastMCP):
             ),
         )
         logging.info("[mcp_server.py] Registered 'memory_query' and 'memory_upsert' tools.")
+
+        # Példa FastAPI végpontra, ahol a választ JSONResponse-ba csomagoljuk
+        from fastapi import APIRouter, Depends
+        router = APIRouter()
+
+        @router.post("/memory_query")
+        async def memory_query_endpoint(
+            ctx: Context = Depends(),
+            query: str = "",
+            top_k: int = 3,
+            collection_name: Optional[str] = None,
+            user_id: Optional[str] = None,
+        ):
+            response = await memory_query_adapter(ctx, query, top_k, collection_name, user_id)
+            return JSONResponse(content=response)
+
+        @router.post("/memory_upsert")
+        async def memory_upsert_endpoint(
+            ctx: Context = Depends(),
+            content: str = "",
+            collection_name: Optional[str] = None,
+            metadata: Optional[dict] = None,
+            id: Optional[str] = None,
+        ):
+            response = await memory_upsert_adapter(ctx, content, collection_name, metadata, id)
+            return JSONResponse(content=response)
 
     async def initialize_server(self):
         """
