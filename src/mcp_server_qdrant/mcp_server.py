@@ -139,8 +139,26 @@ class QdrantMCPServer(FastMCP):
         # --- Memory tools registration ---
         from .memory import memory_query, memory_upsert
 
+        async def memory_query_adapter(
+            query: str,
+            top_k: int = 3,
+            collection_name: str = "default",
+            user_id: Optional[str] = None,
+        ):
+            result = await memory_query(query, top_k=top_k, collection_name=collection_name, user_id=user_id)
+            return json.dumps(result, ensure_ascii=False, indent=2)
+
+        async def memory_upsert_adapter(
+            content: str,
+            collection_name: str = "default",
+            metadata: Optional[dict] = None,
+            id: Optional[str] = None,
+        ):
+            result = await memory_upsert(content, collection_name=collection_name, metadata=metadata, id=id)
+            return json.dumps(result, ensure_ascii=False, indent=2)
+
         self.add_tool(
-            memory_query,
+            memory_query_adapter,
             name="memory_query",
             description=(
                 "Retrieve facts, notes, or memories previously taught to the assistant in conversations or explicit requests. "
@@ -150,7 +168,7 @@ class QdrantMCPServer(FastMCP):
             ),
         )
         self.add_tool(
-            memory_upsert,
+            memory_upsert_adapter,
             name="memory_upsert",
             description=(
                 "Store a new fact, event, or personal note for long-term memory. "
