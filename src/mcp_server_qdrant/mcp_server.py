@@ -145,7 +145,7 @@ class QdrantMCPServer(FastMCP):
             top_k: int = 3,
             collection_name: Optional[str] = None,
             user_id: Optional[str] = None,
-        ) -> List[str]:
+        ) -> str:
             """
             Query the memory database for relevant entries.
             :param ctx: The context for the request.
@@ -160,10 +160,8 @@ class QdrantMCPServer(FastMCP):
                 collection_name = "default"
             try:
                 result = await memory_query(query, top_k=top_k, collection_name=collection_name, user_id=user_id)
-                # Format each result as a string using self.format_entry
                 formatted = []
                 for entry_dict in result["result"]:
-                    # Create a proper Entry object with only the expected fields
                     entry = Entry(
                         content=entry_dict["content"],
                         metadata=entry_dict.get("metadata"),
@@ -171,12 +169,12 @@ class QdrantMCPServer(FastMCP):
                     )
                     formatted.append(self.format_entry(entry))
                 if not formatted:
-                    return [f"No information found for the query '{query}'"]
-                return [f"Results for the query '{query}'"] + formatted
+                    return f"No information found for the query '{query}'"
+                return f"Results for the query '{query}':\n" + "\n".join(formatted)
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_query_adapter")
-                return [f"Error: {str(e)}"]  # Return a list of strings for consistency
+                return f"Error: {str(e)}"
 
         async def memory_upsert_adapter(
             ctx: Context,
@@ -184,7 +182,7 @@ class QdrantMCPServer(FastMCP):
             collection_name: Optional[str] = None,
             metadata: Optional[dict] = None,
             id: Optional[str] = None,
-        ) -> List[str]:
+        ) -> str:
             """
             Store information in the memory database.
             :param ctx: The context for the request.
@@ -199,16 +197,11 @@ class QdrantMCPServer(FastMCP):
                 collection_name = "default"
             try:
                 result = await memory_upsert(content, collection_name=collection_name, metadata=metadata, id=id)
-                # Match the format used by the find function
-                return [
-                    f"Successfully stored in collection '{collection_name}':",
-                    f"<entry><content>{content}</content><metadata>{json.dumps(result['metadata'])}</metadata></entry>"
-                ]
+                return f"Successfully stored in collection '{collection_name}': <entry><content>{content}</content><metadata>{json.dumps(result['metadata'])}</metadata></entry>"
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_upsert_adapter")
-                return [f"Error: {str(e)}"]  # Return a list of strings for consistency
-
+                return f"Error: {str(e)}"
         # Register regular MCP tools
         self.add_tool(
             find_foo,
