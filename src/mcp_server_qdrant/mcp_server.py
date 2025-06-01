@@ -134,7 +134,10 @@ class QdrantMCPServer(FastMCP):
             )
             store_foo = make_partial_function(
                 store_foo, {"collection_name": self.qdrant_settings.collection_name}
-            )        # --- Memory tools registration ---        from .memory import memory_query, memory_upsert
+            )
+            
+        # --- Memory tools registration ---
+        from .memory import memory_query, memory_upsert
         
         async def memory_query_adapter(
             ctx: Context,
@@ -174,8 +177,9 @@ class QdrantMCPServer(FastMCP):
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_query_adapter")
                 return [f"Error: {str(e)}"]  # Return a list of strings for consistency
-        
-        async def memory_upsert_adapter(            ctx: Context,
+
+        async def memory_upsert_adapter(
+            ctx: Context,
             content: str,
             collection_name: Optional[str] = None,
             metadata: Optional[dict] = None,
@@ -204,18 +208,18 @@ class QdrantMCPServer(FastMCP):
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_upsert_adapter")
                 return [f"Error: {str(e)}"]  # Return a list of strings for consistency
-        
+
         # Register regular MCP tools
         self.add_tool(
             find_foo,
             name="find",
-            description=self.tool_settings.find_description,
+            description=self.tool_settings.tool_find_description,
         )
         
         self.add_tool(
             store_foo,
             name="store",
-            description=self.tool_settings.store_description,
+            description=self.tool_settings.tool_store_description,
         )
 
         # Register memory tools 

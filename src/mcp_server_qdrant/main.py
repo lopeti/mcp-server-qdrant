@@ -33,19 +33,14 @@ def main():
     logging.info("[main.py] Importing mcp_server_qdrant.server.mcp ...")
     from mcp_server_qdrant.server import mcp
     
-    logging.info(f"[main.py] Running MCP server with transport: {args.transport}")
-      # Add additional configuration for SSE transport
+    logging.info(f"[main.py] Running MCP server with transport: {args.transport}")    # Add additional configuration for SSE transport
     if args.transport == "sse":
         logging.info("[main.py] Using SSE transport with additional configuration")
         mcp.run(
             transport=args.transport, 
             host="0.0.0.0",      # Explicitly bind to all network interfaces
             port=8000,           # Explicitly set port
-            log_level="info",
-            reload=False,        # Disable auto-reload for stability
-            debug=True,          # Enable debug mode for more logging
-            lifespan="on",       # Critical for SSE transport to handle responses correctly
-            workers=1            # Use a single worker to avoid concurrency issues
+            log_level="info"
         )
     else:
         logging.info(f"[main.py] Using standard {args.transport} transport")
