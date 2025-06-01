@@ -5,6 +5,7 @@ Implements memory_query and memory_upsert tools for long-term semantic memory.
 import uuid
 import datetime
 from typing import List, Dict, Optional, Any
+import logging
 
 from pydantic import BaseModel, Field
 
@@ -25,13 +26,13 @@ def get_default_embedding_provider():
     return get_default_embedding_provider._provider
 
 def get_default_qdrant_client():
+    logger = logging.getLogger(__name__)
     # Singleton pattern for QdrantConnector
     if not hasattr(get_default_qdrant_client, "_client"):
-        # Itt szükség lehet Qdrant URL, API kulcs, collection_name paraméterekre is
-        # Ezeket a settings-ből vagy env-ből célszerű olvasni
         from .settings import QdrantSettings
         qdrant_settings = QdrantSettings()
         embedding_provider = get_default_embedding_provider()
+        logger.info("[memory.py] Creating new QdrantConnector singleton instance.")
         get_default_qdrant_client._client = QdrantConnector(
             qdrant_url=getattr(qdrant_settings, 'qdrant_url', None),
             qdrant_api_key=getattr(qdrant_settings, 'qdrant_api_key', None),
@@ -39,7 +40,12 @@ def get_default_qdrant_client():
             embedding_provider=embedding_provider,
             qdrant_local_path=getattr(qdrant_settings, 'qdrant_local_path', None),
         )
-    return get_default_qdrant_client._client
+    else:
+        logger.info(f"[memory.py] Reusing QdrantConnector singleton instance: {get_default_qdrant_client._client}")
+    # Ellenőrizzük, hogy a _client attribútum él-e
+    qc = get_default_qdrant_client._client
+    logger.info(f"[memory.py] QdrantConnector._client: {getattr(qc, '_client', None)}")
+    return qc
 
 # --- memory_query ---
 async def memory_query(
@@ -48,23 +54,16 @@ async def memory_query(
     collection_name: str = "default",
     user_id: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """
-    Semantic search for relevant memories/facts.
-    Returns a list of memory objects sorted by similarity score.
-    
-    Parameters:
-    - query: The search query text
-    - top_k: Maximum number of results to return
-    - collection_name: Name of the collection to search in
-    - user_id: Optional user identifier for filtering
-    """
+    logger = logging.getLogger(__name__)
+    logger.info(f"[memory.py] memory_query called: query={query}, top_k={top_k}, collection_name={collection_name}, user_id={user_id}")
     client = get_default_qdrant_client()
-    
+    logger.info(f"[memory.py] memory_query using QdrantConnector: {client}, _client: {getattr(client, '_client', None)}")
     hits = await client.search(
         query=query,
         collection_name=collection_name,
         limit=top_k
     )
+    logger.info(f"[memory.py] memory_query hits: {hits}")
     result = []
     for idx, hit in enumerate(hits):
         content = getattr(hit, "content", "") or ""
@@ -78,6 +77,7 @@ async def memory_query(
         })
     # Sort by score descending
     result.sort(key=lambda x: x["score"], reverse=True)
+    logger.info(f"[memory.py] memory_query returning {len(result)} results.")
     return {"result": result}
 
 # --- memory_upsert ---
@@ -87,11 +87,10 @@ async def memory_upsert(
     metadata: Optional[Dict[str, Any]] = None,
     id: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """
-    Add or update a memory/fact in the database.
-    Returns status, id, and metadata (with timestamp).
-    """
+    logger = logging.getLogger(__name__)
+    logger.info(f"[memory.py] memory_upsert called: content={content}, collection_name={collection_name}, id={id}")
     client = get_default_qdrant_client()
+    logger.info(f"[memory.py] memory_upsert using QdrantConnector: {client}, _client: {getattr(client, '_client', None)}")
     memory_id = id or str(uuid.uuid4())
     meta = dict(metadata or {})
     meta.setdefault("timestamp", now_iso())
@@ -99,6 +98,7 @@ async def memory_upsert(
     meta.setdefault("collection_name", collection_name)
     entry = Entry(content=content, metadata=meta)
     await client.store(entry, collection_name=collection_name)
+    logger.info(f"[memory.py] memory_upsert stored entry: {entry}")
     return {
         "status": "success",
         "id": memory_id,

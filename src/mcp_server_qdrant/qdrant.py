@@ -65,6 +65,7 @@ class QdrantConnector:
         logging.info(
             f"[qdrant.py] Storing entry: {entry.content[:30]}... in collection: {collection_name or self._default_collection_name}"
         )
+        logging.info(f"[qdrant.py] QdrantConnector.store: self._client={self._client}")
         """
         Store some information in the Qdrant collection, along with the specified metadata.
         :param entry: The entry to store in the Qdrant collection.
@@ -100,6 +101,7 @@ class QdrantConnector:
         logging.info(
             f"[qdrant.py] Searching for query: '{query}' in collection: {collection_name or self._default_collection_name}, limit: {limit}"
         )
+        logging.info(f"[qdrant.py] QdrantConnector.search: self._client={self._client}")
         """
         Find points in the Qdrant collection. If there are no entries found, an empty list is returned.
         :param query: The query to use for the search.
