@@ -9,5 +9,7 @@ mcp = QdrantMCPServer(
     tool_settings=ToolSettings(),
     qdrant_settings=QdrantSettings(),
     embedding_provider_settings=EmbeddingProviderSettings(),
+    # Add server settings to ensure proper ASGI handling
+    server_options={"host": "0.0.0.0", "port": 8000},
 )
 

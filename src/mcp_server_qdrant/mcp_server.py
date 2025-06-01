@@ -148,11 +148,16 @@ class QdrantMCPServer(FastMCP):
             if collection_name is None:
                 collection_name = "default"
             try:
-                result = await memory_query(query, top_k=top_k, collection_name=collection_name, user_id=user_id)
-                # Format each result as a string using self.format_entry
-                formatted = [
-                    self.format_entry(Entry(**entry)) for entry in result["result"]
-                ]
+                result = await memory_query(query, top_k=top_k, collection_name=collection_name, user_id=user_id)                # Format each result as a string using self.format_entry
+                formatted = []
+                for entry_dict in result["result"]:
+                    # Create a proper Entry object with only the expected fields
+                    entry = Entry(
+                        content=entry_dict["content"],
+                        metadata=entry_dict.get("metadata"),
+                        score=entry_dict.get("score")
+                    )
+                    formatted.append(self.format_entry(entry))
                 if not formatted:
                     return [f"No information found for the query '{query}'"]
                 return [f"Results for the query '{query}'"] + formatted
@@ -171,11 +176,15 @@ class QdrantMCPServer(FastMCP):
                 collection_name = "default"
             try:
                 result = await memory_upsert(content, collection_name=collection_name, metadata=metadata, id=id)
-                return result
+                # Match the format used by the find function
+                return [
+                    f"Successfully stored in collection '{collection_name}':",
+                    f"<entry><content>{content}</content><metadata>{json.dumps(result['metadata'])}</metadata></entry>"
+                ]
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_upsert_adapter")
-                return {"error": str(e)}
+                return [f"Error: {str(e)}"]  # Return a list of strings for consistency
 
         self.add_tool(
             memory_query_adapter,
