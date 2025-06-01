@@ -57,13 +57,20 @@ async def memory_query(
 ) -> Dict[str, Any]:
     logger = logging.getLogger(__name__)
     logger.info(f"[memory.py] memory_query called: query={query}, top_k={top_k}, collection_name={collection_name}, user_id={user_id}")
-    client = get_default_qdrant_client()
-    logger.info(f"[memory.py] memory_query using QdrantConnector: {client}, _client: {getattr(client, '_client', None)}")
-    hits = await client.search(
-        query=query,
-        collection_name=collection_name,
-        limit=top_k
-    )
+    try:
+        logger.info(f"[memory.py] About to get QdrantConnector client")
+        client = get_default_qdrant_client()
+        logger.info(f"[memory.py] memory_query using QdrantConnector: {client}, _client: {getattr(client, '_client', None)}")
+        logger.info(f"[memory.py] About to call client.search")
+        hits = await client.search(
+            query=query,
+            collection_name=collection_name,
+            limit=top_k
+        )
+        logger.info(f"[memory.py] client.search returned successfully")
+    except Exception as e:
+        logger.error(f"[memory.py] Error during search: {str(e)}")
+        raise
     logger.info(f"[memory.py] memory_query hits: {hits}")
     result = []
     for idx, hit in enumerate(hits):

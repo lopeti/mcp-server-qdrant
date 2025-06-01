@@ -110,10 +110,17 @@ class QdrantConnector:
         :param limit: The maximum number of entries to return.
         :return: A list of entries found.
         """
-        collection_name = collection_name or self._default_collection_name
-        collection_exists = await self._client.collection_exists(collection_name)
-        if not collection_exists:
-            return []
+        try:
+            collection_name = collection_name or self._default_collection_name
+            logging.info(f"[qdrant.py] Checking if collection exists: {collection_name}")
+            collection_exists = await self._client.collection_exists(collection_name)
+            logging.info(f"[qdrant.py] Collection exists check result: {collection_exists}")
+            if not collection_exists:
+                logging.warning(f"[qdrant.py] Collection does not exist: {collection_name}")
+                return []
+        except Exception as e:
+            logging.error(f"[qdrant.py] Error checking collection existence: {str(e)}")
+            raise
 
         # Embed the query
         # ToDo: instead of embedding text explicitly, use `models.Document`,
