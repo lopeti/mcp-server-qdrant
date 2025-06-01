@@ -47,19 +47,23 @@ def main():
     if args.transport == "sse":
         logging.info("[main.py] Using SSE transport with additional configuration")
         try:
+            logging.debug("[main.py] Preparing to run MCP server with SSE transport")
             mcp.run(
                 transport=args.transport, 
                 host="0.0.0.0",      # Explicitly bind to all network interfaces
                 port=8000,           # Explicitly set port
                 log_level="info"
             )
+            logging.debug("[main.py] MCP server with SSE transport started successfully")
         except Exception as e:
             logging.error(f"[main.py] Failed to run MCP server with SSE transport: {e}")
             raise
     else:
         logging.info(f"[main.py] Using standard {args.transport} transport")
         try:
+            logging.debug(f"[main.py] Preparing to run MCP server with transport {args.transport}")
             mcp.run(transport=args.transport)
+            logging.debug(f"[main.py] MCP server with transport {args.transport} started successfully")
         except Exception as e:
             logging.error(f"[main.py] Failed to run MCP server with transport {args.transport}: {e}")
             raise
@@ -67,7 +71,9 @@ def main():
 
 if __name__ == "__main__":
     try:
+        logging.debug("[main.py] Entering main function")
         main()
+        logging.debug("[main.py] Exiting main function")
     except Exception as e:
         logging.critical(f"[main.py] Unhandled exception in main: {e}")
         raise
