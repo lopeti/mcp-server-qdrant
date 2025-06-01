@@ -142,30 +142,34 @@ class QdrantMCPServer(FastMCP):
         async def memory_query_adapter(
             query: str,
             top_k: int = 3,
-            collection_name: str = "default",
+            collection_name: Optional[str] = None,
             user_id: Optional[str] = None,
         ):
+            if collection_name is None:
+                collection_name = "default"
             try:
                 result = await memory_query(query, top_k=top_k, collection_name=collection_name, user_id=user_id)
-                return result  # Return dict, not JSON string
+                return result
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_query_adapter")
-                return {"error": str(e)}  # Return dict, not JSON string
+                return {"error": str(e)}
 
         async def memory_upsert_adapter(
             content: str,
-            collection_name: str = "default",
+            collection_name: Optional[str] = None,
             metadata: Optional[dict] = None,
             id: Optional[str] = None,
         ):
+            if collection_name is None:
+                collection_name = "default"
             try:
                 result = await memory_upsert(content, collection_name=collection_name, metadata=metadata, id=id)
-                return result  # Return dict, not JSON string
+                return result
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_upsert_adapter")
-                return {"error": str(e)}  # Return dict, not JSON string
+                return {"error": str(e)}
 
         self.add_tool(
             memory_query_adapter,
