@@ -145,36 +145,32 @@ class QdrantMCPServer(FastMCP):
             top_k: int = 3,
             collection_name: Optional[str] = None,
             user_id: Optional[str] = None,
-        ) -> str:
-            """
-            Query the memory database for relevant entries.
-            :param ctx: The context for the request.
-            :param query: The query string to search for.
-            :param top_k: Maximum number of results to return.
-            :param collection_name: The collection to search in. Defaults to "default".
-            :param user_id: Optional user ID to filter by.
-            :return: A list of formatted entries as strings.
-            """
+        ) -> List[str]:
             await ctx.debug(f"Searching for query '{query}' in collection {collection_name or 'default'}")
             if collection_name is None:
                 collection_name = "default"
             try:
                 result = await memory_query(query, top_k=top_k, collection_name=collection_name, user_id=user_id)
-                formatted = []
-                for entry_dict in result["result"]:
-                    entry = Entry(
+                entries = [
+                    Entry(
                         content=entry_dict["content"],
                         metadata=entry_dict.get("metadata"),
                         score=entry_dict.get("score")
                     )
-                    formatted.append(self.format_entry(entry))
-                if not formatted:
-                    return f"No information found for the query '{query}'"
-                return f"Results for the query '{query}':\n" + "\n".join(formatted)
+                    for entry_dict in result["result"]
+                ]
+                if not entries:
+                    return [f"No information found for the query '{query}'"]
+                return [
+                    f"Results for '{query}':"
+                ] + [
+                    f"• {entry.content} (timestamp: {entry.metadata.get('timestamp', '-')}, collection: {entry.metadata.get('collection_name', '-')})"
+                    for entry in entries
+                ]
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_query_adapter")
-                return f"Error: {str(e)}"
+                return [f"Error: {str(e)}"]
 
         async def memory_upsert_adapter(
             ctx: Context,
@@ -182,7 +178,7 @@ class QdrantMCPServer(FastMCP):
             collection_name: Optional[str] = None,
             metadata: Optional[dict] = None,
             id: Optional[str] = None,
-        ) -> str:
+        ) -> List[str]:
             """
             Store information in the memory database.
             :param ctx: The context for the request.
@@ -197,11 +193,12 @@ class QdrantMCPServer(FastMCP):
                 collection_name = "default"
             try:
                 result = await memory_upsert(content, collection_name=collection_name, metadata=metadata, id=id)
-                return f"Successfully stored in collection '{collection_name}': <entry><content>{content}</content><metadata>{json.dumps(result['metadata'])}</metadata></entry>"
+                ts = result["metadata"].get("timestamp", "-")
+                return [f"Successfully stored in collection '{collection_name}': '{content}' (timestamp: {ts})"]
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_upsert_adapter")
-                return f"Error: {str(e)}"
+                return [f"An error occurred: {str(e)}"]
         # Register regular MCP tools
         self.add_tool(
             find_foo,
