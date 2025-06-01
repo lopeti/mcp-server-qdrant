@@ -3,10 +3,9 @@ Fact Memory module for MCP Server Qdrant
 Implements memory_query and memory_upsert tools for long-term semantic memory.
 """
 import uuid
-import datetime
-from typing import List, Dict, Optional, Any
+from typing import Dict, Optional, Any
 import logging
-import subprocess
+import datetime
 
 from pydantic import BaseModel, Field
 
@@ -51,23 +50,23 @@ def get_default_qdrant_client():
 # --- memory_query ---
 async def memory_query(
     query: str,
-    top_k: int = 3,
+    top_k: int = 10,
     collection_name: str = "default",
     user_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     logger = logging.getLogger(__name__)
     logger.info(f"[memory.py] memory_query called: query={query}, top_k={top_k}, collection_name={collection_name}, user_id={user_id}")
     try:
-        logger.info(f"[memory.py] About to get QdrantConnector client")
+        logger.info("[memory.py] About to get QdrantConnector client")
         client = get_default_qdrant_client()
         logger.info(f"[memory.py] memory_query using QdrantConnector: {client}, _client: {getattr(client, '_client', None)}")
-        logger.info(f"[memory.py] About to call client.search")
+        logger.info("[memory.py] About to call client.search")
         hits = await client.search(
             query=query,
             collection_name=collection_name,
             limit=top_k
         )
-        logger.info(f"[memory.py] client.search returned successfully")
+        logger.info("[memory.py] client.search returned successfully")
     except Exception as e:
         logger.error(f"[memory.py] Error during search: {str(e)}")
         raise
@@ -118,7 +117,7 @@ async def memory_upsert(
 # Ez a szekció csak a Pydantic sémákat tartalmazza, a tényleges regisztrációt a szerver végzi.
 class MemoryQueryArgs(BaseModel):
     query: str = Field(..., description="Free-text search query.")
-    top_k: int = Field(3, description="Maximum results to return.")
+    top_k: int = Field(10, description="Maximum results to return.")
     collection_name: str = Field("default", description="Memory collection name.")
     user_id: Optional[str] = Field(None, description="User ID to filter by.")
 

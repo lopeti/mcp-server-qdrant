@@ -59,7 +59,7 @@ class QdrantMCPServer(FastMCP):
         async def memory_query_adapter(
             ctx: Context,
             query: str,
-            top_k: int = 3,
+            top_k: int = 10,
             collection_name: Optional[str] = None,
             user_id: Optional[str] = None,
         ) -> List[str]:
@@ -182,7 +182,7 @@ class QdrantMCPServer(FastMCP):
         async def memory_query_adapter(
             ctx: Context,
             query: str,
-            top_k: int = 3,
+            top_k: int = 10,
             collection_name: Optional[str] = None,
             user_id: Optional[str] = None,
         ) -> List[str]:
