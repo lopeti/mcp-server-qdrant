@@ -121,13 +121,5 @@ class MemoryUpsertArgs(BaseModel):
     metadata: Optional[Dict[str, Any]] = Field(None, description="Metadata (user_id, timestamp, etc.)")
     id: Optional[str] = Field(None, description="Memory ID (for update).")
 
-# Logolom a futó git commit hash-t és a betöltés idejét a memory.py betöltésekor, így a logban mindig látszik, melyik verzió fut.
-try:
-    GIT_HASH = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
-except Exception:
-    GIT_HASH = "unknown"
-
-logger = logging.getLogger(__name__)
-logger.info(f"[memory.py] MCP server version: {GIT_HASH} (loaded {datetime.datetime.utcnow().isoformat()} UTC)")
 
 # Ready for future extension: memory_delete, memory_list, etc.

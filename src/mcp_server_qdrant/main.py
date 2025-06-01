@@ -1,5 +1,7 @@
 import argparse
 import logging
+import subprocess
+import datetime
 from . import memory
 
 
@@ -11,6 +13,12 @@ def main():
     """
     logging.basicConfig(level=logging.INFO)
     logging.info("[main.py] Starting MCP server entrypoint...")
+    # Logolom a futó git commit hash-t és a betöltés idejét a memory.py betöltésekor, így a logban mindig látszik, melyik verzió fut.
+    try:
+        GIT_HASH = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
+    except Exception:
+        GIT_HASH = "unknown"
+    logging.info(f"[memory.py] MCP server version: {GIT_HASH} (loaded {datetime.datetime.utcnow().isoformat()} UTC)")
 
     # Parse the command-line arguments to determine the transport protocol.
     parser = argparse.ArgumentParser(description="mcp-server-qdrant")
