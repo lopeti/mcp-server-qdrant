@@ -63,79 +63,7 @@ class QdrantMCPServer(FastMCP):
         logging.info("[mcp_server.py] Setting up tools for QdrantMCPServer.")
         """
         Register the tools in the server.
-        """
-
-        async def store(
-            ctx: Context,
-            information: str,
-            collection_name: str,
-            # The `metadata` parameter is defined as non-optional, but it can be None.
-            # If we set it to be optional, some of the MCP clients, like Cursor, cannot
-            # handle the optional parameter correctly.
-            metadata: Optional[Metadata] = None,  # type: ignore
-        ) -> str:
-            """
-            Store some information in Qdrant.
-            :param ctx: The context for the request.
-            :param information: The information to store.
-            :param metadata: JSON metadata to store with the information, optional.
-            :param collection_name: The name of the collection to store the information in, optional. If not provided,
-                                    the default collection is used.
-            :return: A message indicating that the information was stored.
-            """
-            await ctx.debug(f"Storing information {information} in Qdrant")
-
-            entry = Entry(content=information, metadata=metadata)
-
-            await self.qdrant_connector.store(entry, collection_name=collection_name)
-            if collection_name:
-                return f"Remembered: {information} in collection {collection_name}"
-            return f"Remembered: {information}"
-
-        async def find(
-            ctx: Context,
-            query: str,
-            collection_name: str,
-        ) -> List[str]:
-            """
-            Find memories in Qdrant.
-            :param ctx: The context for the request.
-            :param query: The query to use for the search.
-            :param collection_name: The name of the collection to search in, optional. If not provided,
-                                    the default collection is used.
-            :return: A list of entries found.
-            """
-            await ctx.debug(f"Finding results for query {query}")
-            if collection_name:
-                await ctx.debug(
-                    f"Overriding the collection name with {collection_name}"
-                )
-
-            entries = await self.qdrant_connector.search(
-                query,
-                collection_name=collection_name,
-                limit=self.qdrant_settings.search_limit,
-            )
-            if not entries:
-                return [f"No information found for the query '{query}'"]
-            content = [
-                f"Results for the query '{query}'",
-            ]
-            for entry in entries:
-                content.append(self.format_entry(entry))
-            return content
-
-        find_foo = find
-        store_foo = store
-
-        if self.qdrant_settings.collection_name:
-            find_foo = make_partial_function(
-                find_foo, {"collection_name": self.qdrant_settings.collection_name}
-            )
-            store_foo = make_partial_function(
-                store_foo, {"collection_name": self.qdrant_settings.collection_name}
-            )
-            
+        """            
         # --- Memory tools registration ---
         from .memory import memory_query, memory_upsert
         
@@ -171,6 +99,8 @@ class QdrantMCPServer(FastMCP):
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_query_adapter")
                 return [f"Error: {str(e)}"]
+            # extra safety
+            return ["Unknown error!"]
 
         async def memory_upsert_adapter(
             ctx: Context,
@@ -199,18 +129,9 @@ class QdrantMCPServer(FastMCP):
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_upsert_adapter")
                 return [f"An error occurred: {str(e)}"]
-        # Register regular MCP tools
-        self.add_tool(
-            find_foo,
-            name="find",
-            description=self.tool_settings.tool_find_description,
-        )
-        
-        self.add_tool(
-            store_foo,
-            name="store",
-            description=self.tool_settings.tool_store_description,
-        )
+            # extra safety
+            return ["Unknown error!"]
+
 
         # Register memory tools 
         self.add_tool(
