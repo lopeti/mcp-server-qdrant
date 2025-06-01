@@ -149,12 +149,17 @@ class QdrantMCPServer(FastMCP):
                 collection_name = "default"
             try:
                 result = await memory_query(query, top_k=top_k, collection_name=collection_name, user_id=user_id)
-                # Return only the list of results, not the dict
-                return result["result"]
+                # Format each result as a string using self.format_entry
+                formatted = [
+                    self.format_entry(Entry(**entry)) for entry in result["result"]
+                ]
+                if not formatted:
+                    return [f"No information found for the query '{query}'"]
+                return [f"Results for the query '{query}'"] + formatted
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_query_adapter")
-                return [{"error": str(e)}]  # Return a list with error dict for consistency
+                return [f"Error: {str(e)}"]  # Return a list of strings for consistency
 
         async def memory_upsert_adapter(
             content: str,
