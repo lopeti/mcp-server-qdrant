@@ -2,7 +2,6 @@ import logging
 import datetime
 from typing import Any, List, Optional
 
-from fastapi.responses import JSONResponse
 from fastmcp import Context, FastMCP
 
 from mcp_server_qdrant.embeddings.factory import create_embedding_provider
@@ -156,41 +155,7 @@ class QdrantMCPServer(FastMCP):
             ),
         )
         logging.info("[mcp_server.py] Registered 'memory_query' and 'memory_upsert' tools.")
-
-        # Példa FastAPI végpontra, ahol a választ JSONResponse-ba csomagoljuk
-        from fastapi import APIRouter, Depends, Request
-        import datetime
-        router = APIRouter()
-
-        @router.post("/memory_query")
-        async def memory_query_endpoint(
-            request: Request,
-            ctx: Context = Depends(),
-            query: str = "",
-            top_k: int = 3,
-            collection_name: Optional[str] = None,
-            user_id: Optional[str] = None,
-        ):
-            now = datetime.datetime.now().isoformat()
-            logging.info(f"[HTTP] {now} - Incoming request: POST /memory_query - Handler: memory_query_endpoint")
-            logging.info(f"[HTTP] {now} - Request details: query={query}, top_k={top_k}, collection_name={collection_name}, user_id={user_id}")
-            response = await memory_query_adapter(ctx, query, top_k, collection_name, user_id)
-            return JSONResponse(content=response)
-
-        @router.post("/memory_upsert")
-        async def memory_upsert_endpoint(
-            request: Request,
-            ctx: Context = Depends(),
-            content: str = "",
-            collection_name: Optional[str] = None,
-            metadata: Optional[dict] = None,
-            id: Optional[str] = None,
-        ):
-            now = datetime.datetime.now().isoformat()
-            logging.info(f"[HTTP] {now} - Incoming request: POST /memory_upsert - Handler: memory_upsert_endpoint")
-            logging.info(f"[HTTP] {now} - Request details: content={content}, collection_name={collection_name}, metadata={metadata}, id={id}")
-            response = await memory_upsert_adapter(ctx, content, collection_name, metadata, id)
-            return JSONResponse(content=response)
+        # FastAPI router and endpoints removed: not needed in MCP stdio/sse mode
 
     async def initialize_server(self):
         """
@@ -313,3 +278,4 @@ class QdrantMCPServer(FastMCP):
             ),
         )
         logging.info("[mcp_server.py] Registered 'memory_query' and 'memory_upsert' tools.")
+        # FastAPI router and endpoints removed: not needed in MCP stdio/sse mode
