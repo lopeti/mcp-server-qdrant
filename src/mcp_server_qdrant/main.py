@@ -17,6 +17,7 @@ def main():
     # Log the running git commit hash and load time
     try:
         GIT_HASH = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
+        logging.debug(f"[main.py] Retrieved git hash: {GIT_HASH}")
     except Exception as e:
         GIT_HASH = "unknown"
         logging.error(f"[main.py] Failed to retrieve git hash: {e}")
@@ -37,6 +38,7 @@ def main():
     logging.info("[main.py] Importing mcp_server_qdrant.server.mcp ...")
     try:
         from mcp_server_qdrant.server import mcp
+        logging.debug("[main.py] Successfully imported mcp_server_qdrant.server.mcp")
     except ImportError as e:
         logging.error(f"[main.py] Failed to import mcp_server_qdrant.server.mcp: {e}")
         raise
