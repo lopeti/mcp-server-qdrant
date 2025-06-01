@@ -13,7 +13,7 @@ def main():
     """
     logging.basicConfig(level=logging.INFO)
     logging.info("[main.py] Starting MCP server entrypoint...")
-    # Logolom a futó git commit hash-t és a betöltés idejét a memory.py betöltésekor, így a logban mindig látszik, melyik verzió fut.
+    # Log the running git commit hash and load time
     try:
         GIT_HASH = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
     except Exception:
@@ -28,15 +28,28 @@ def main():
         default="stdio",
     )
     args = parser.parse_args()
-    logging.info(f"[main.py] Parsed arguments: {args}")
-
-    # Import is done here to make sure environment variables are loaded
+    logging.info(f"[main.py] Parsed arguments: {args}")    # Import is done here to make sure environment variables are loaded
     # only after we make the changes.
     logging.info("[main.py] Importing mcp_server_qdrant.server.mcp ...")
     from mcp_server_qdrant.server import mcp
-
+    
     logging.info(f"[main.py] Running MCP server with transport: {args.transport}")
-    mcp.run(transport=args.transport)
+      # Add additional configuration for SSE transport
+    if args.transport == "sse":
+        logging.info("[main.py] Using SSE transport with additional configuration")
+        mcp.run(
+            transport=args.transport, 
+            host="0.0.0.0",      # Explicitly bind to all network interfaces
+            port=8000,           # Explicitly set port
+            log_level="info",
+            reload=False,        # Disable auto-reload for stability
+            debug=True,          # Enable debug mode for more logging
+            lifespan="on",       # Critical for SSE transport to handle responses correctly
+            workers=1            # Use a single worker to avoid concurrency issues
+        )
+    else:
+        logging.info(f"[main.py] Using standard {args.transport} transport")
+        mcp.run(transport=args.transport)
 
 
 if __name__ == "__main__":

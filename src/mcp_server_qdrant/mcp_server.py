@@ -134,21 +134,30 @@ class QdrantMCPServer(FastMCP):
             )
             store_foo = make_partial_function(
                 store_foo, {"collection_name": self.qdrant_settings.collection_name}
-            )
-
-        # --- Memory tools registration ---
-        from .memory import memory_query, memory_upsert
-
+            )        # --- Memory tools registration ---        from .memory import memory_query, memory_upsert
+        
         async def memory_query_adapter(
+            ctx: Context,
             query: str,
             top_k: int = 3,
             collection_name: Optional[str] = None,
             user_id: Optional[str] = None,
-        ):
+        ) -> List[str]:
+            """
+            Query the memory database for relevant entries.
+            :param ctx: The context for the request.
+            :param query: The query string to search for.
+            :param top_k: Maximum number of results to return.
+            :param collection_name: The collection to search in. Defaults to "default".
+            :param user_id: Optional user ID to filter by.
+            :return: A list of formatted entries as strings.
+            """
+            await ctx.debug(f"Searching for query '{query}' in collection {collection_name or 'default'}")
             if collection_name is None:
                 collection_name = "default"
             try:
-                result = await memory_query(query, top_k=top_k, collection_name=collection_name, user_id=user_id)                # Format each result as a string using self.format_entry
+                result = await memory_query(query, top_k=top_k, collection_name=collection_name, user_id=user_id)
+                # Format each result as a string using self.format_entry
                 formatted = []
                 for entry_dict in result["result"]:
                     # Create a proper Entry object with only the expected fields
@@ -165,13 +174,23 @@ class QdrantMCPServer(FastMCP):
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_query_adapter")
                 return [f"Error: {str(e)}"]  # Return a list of strings for consistency
-
-        async def memory_upsert_adapter(
+        
+        async def memory_upsert_adapter(            ctx: Context,
             content: str,
             collection_name: Optional[str] = None,
             metadata: Optional[dict] = None,
             id: Optional[str] = None,
-        ):
+        ) -> List[str]:
+            """
+            Store information in the memory database.
+            :param ctx: The context for the request.
+            :param content: The content to store.
+            :param collection_name: The collection to store in. Defaults to "default".
+            :param metadata: Optional metadata to attach to the content.
+            :param id: Optional ID to assign to the content.
+            :return: A confirmation message as a list of strings.
+            """
+            await ctx.debug(f"Storing content in collection {collection_name or 'default'}")
             if collection_name is None:
                 collection_name = "default"
             try:
@@ -185,7 +204,21 @@ class QdrantMCPServer(FastMCP):
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_upsert_adapter")
                 return [f"Error: {str(e)}"]  # Return a list of strings for consistency
+        
+        # Register regular MCP tools
+        self.add_tool(
+            find_foo,
+            name="find",
+            description=self.tool_settings.find_description,
+        )
+        
+        self.add_tool(
+            store_foo,
+            name="store",
+            description=self.tool_settings.store_description,
+        )
 
+        # Register memory tools 
         self.add_tool(
             memory_query_adapter,
             name="memory_query",
