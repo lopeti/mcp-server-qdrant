@@ -43,6 +43,13 @@ def main():
         logging.error(f"[main.py] Failed to import mcp_server_qdrant.server.mcp: {e}")
         raise
 
+    # Set FORCE_ASGI_SERVER env var only for HTTP/SSE transports
+    import os
+    if args.transport in ("sse", "streamable-http"):
+        os.environ["FORCE_ASGI_SERVER"] = "1"
+    else:
+        os.environ.pop("FORCE_ASGI_SERVER", None)
+
     logging.info(f"[main.py] Running MCP server with transport: {args.transport}")
 
     # Add additional configuration for SSE transport
