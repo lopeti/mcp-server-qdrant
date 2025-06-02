@@ -52,20 +52,20 @@ def main():
 
     logging.info(f"[main.py] Running MCP server with transport: {args.transport}")
 
-    # Add additional configuration for SSE transport
-    if args.transport == "sse":
-        logging.info("[main.py] Using SSE transport with additional configuration")
+    # Add additional configuration for SSE and streamable-http transport
+    if args.transport in ("sse", "streamable-http"):
+        logging.info(f"[main.py] Using {args.transport} transport with additional configuration")
         try:
-            logging.debug("[main.py] Preparing to run MCP server with SSE transport")
+            logging.debug(f"[main.py] Preparing to run MCP server with {args.transport} transport")
             mcp.run(
                 transport=args.transport, 
                 host="0.0.0.0",      # Explicitly bind to all network interfaces
                 port=8000,           # Explicitly set port
                 log_level="info"
             )
-            logging.debug("[main.py] MCP server with SSE transport started successfully")
+            logging.debug(f"[main.py] MCP server with {args.transport} transport started successfully")
         except Exception as e:
-            logging.error(f"[main.py] Failed to run MCP server with SSE transport: {e}")
+            logging.error(f"[main.py] Failed to run MCP server with {args.transport} transport: {e}")
             raise
     else:
         logging.info(f"[main.py] Using standard {args.transport} transport")
