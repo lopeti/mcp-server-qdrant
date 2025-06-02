@@ -56,9 +56,9 @@ class QdrantMCPServer(FastMCP):
         # --- Memory tools registration ---
         from .memory import memory_query, memory_upsert
 
-        async def dummy_adapter(ctx: Context, *args, **kwargs) -> List[str]:
+        async def dummy_adapter(ctx: Context) -> List[str]:
             logger = logging.getLogger(__name__)
-            logger.info("[mcp_server.py] DUMMY ADAPTER called with args=%s kwargs=%s", args, kwargs)
+            logger.info("[mcp_server.py] DUMMY ADAPTER called")
             await ctx.debug("DUMMY ADAPTER called")
             return [f"Dummy adapter response at {datetime.datetime.utcnow().isoformat()} UTC"]
 
@@ -190,9 +190,9 @@ class QdrantMCPServer(FastMCP):
         # --- Memory tools registration ---
         from .memory import memory_query, memory_upsert
 
-        async def dummy_adapter(ctx: Context, *args, **kwargs) -> List[str]:
+        async def dummy_adapter(ctx: Context) -> List[str]:
             logger = logging.getLogger(__name__)
-            logger.info("[mcp_server.py] DUMMY ADAPTER called with args=%s kwargs=%s", args, kwargs)
+            logger.info("[mcp_server.py] DUMMY ADAPTER called")
             await ctx.debug("DUMMY ADAPTER called")
             return [f"Dummy adapter response at {datetime.datetime.utcnow().isoformat()} UTC"]
 
