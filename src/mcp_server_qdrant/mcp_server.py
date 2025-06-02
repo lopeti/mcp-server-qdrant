@@ -56,6 +56,12 @@ class QdrantMCPServer(FastMCP):
         # --- Memory tools registration ---
         from .memory import memory_query, memory_upsert
 
+        async def dummy_adapter(ctx: Context, *args, **kwargs) -> List[str]:
+            logger = logging.getLogger(__name__)
+            logger.info("[mcp_server.py] DUMMY ADAPTER called with args=%s kwargs=%s", args, kwargs)
+            await ctx.debug("DUMMY ADAPTER called")
+            return [f"Dummy adapter response at {datetime.datetime.utcnow().isoformat()} UTC"]
+
         async def memory_query_adapter(
             ctx: Context,
             query: str,
@@ -64,8 +70,8 @@ class QdrantMCPServer(FastMCP):
             user_id: Optional[str] = None,
         ) -> List[str]:
             logger = logging.getLogger(__name__)
-            logger.info(f"[mcp_server.py] memory_query_adapter called with query='{query}', top_k={top_k}, collection_name={collection_name}")
-            await ctx.debug(f"Searching for query '{query}' in collection {collection_name or 'default'}")
+            logger.info(f"[mcp_server.py] memory_query_adapter START: query='{query}', top_k={top_k}, collection_name={collection_name}, user_id={user_id}")
+            await ctx.debug(f"memory_query_adapter START: query='{query}', top_k={top_k}, collection_name={collection_name}, user_id={user_id}")
             if collection_name is None:
                 collection_name = "default"
             try:
@@ -86,6 +92,7 @@ class QdrantMCPServer(FastMCP):
 
                 if not entries:
                     logger.info(f"[mcp_server.py] No entries found for query '{query}'")
+                    logger.info("[mcp_server.py] memory_query_adapter END (no entries)")
                     return [f"No information found for the query '{query}'"]
 
                 response = [
@@ -95,12 +102,15 @@ class QdrantMCPServer(FastMCP):
                     for entry in entries
                 ]
                 logger.info(f"[mcp_server.py] Returning response with {len(response)} items")
+                logger.info("[mcp_server.py] memory_query_adapter END (success)")
                 return  response
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.exception(f"[mcp_server.py] Exception in memory_query_adapter: {str(e)}")
+                logger.info("[mcp_server.py] memory_query_adapter END (exception)")
                 return [f"Error searching for '{query}': {str(e)}"]
             # extra safety
+            logger.info("[mcp_server.py] memory_query_adapter END (unknown error)")
             return ["Unknown error!"]
 
         async def memory_upsert_adapter(
@@ -110,27 +120,23 @@ class QdrantMCPServer(FastMCP):
             metadata: Optional[dict] = None,
             id: Optional[str] = None,
         ) -> List[str]:
-            """
-            Store information in the memory database.
-            :param ctx: The context for the request.
-            :param content: The content to store.
-            :param collection_name: The collection to store in. Defaults to "default".
-            :param metadata: Optional metadata to attach to the content.
-            :param id: Optional ID to assign to the content.
-            :return: A confirmation message as a list of strings.
-            """
-            await ctx.debug(f"Storing content in collection {collection_name or 'default'}")
+            logger = logging.getLogger(__name__)
+            logger.info(f"[mcp_server.py] memory_upsert_adapter START: content='{content}', collection_name={collection_name}, metadata={metadata}, id={id}")
+            await ctx.debug(f"memory_upsert_adapter START: content='{content}', collection_name={collection_name}, metadata={metadata}, id={id}")
             if collection_name is None:
                 collection_name = "default"
             try:
                 result = await memory_upsert(content, collection_name=collection_name, metadata=metadata, id=id)
                 ts = result["metadata"].get("timestamp", "-")
+                logger.info(f"[mcp_server.py] memory_upsert_adapter END (success): stored in '{collection_name}' ts={ts}")
                 return [f"Successfully stored in collection '{collection_name}': '{content}' (timestamp: {ts})"]
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_upsert_adapter")
+                logger.info("[mcp_server.py] memory_upsert_adapter END (exception)")
                 return [f"An error occurred: {str(e)}"]
             # extra safety
+            logger.info("[mcp_server.py] memory_upsert_adapter END (unknown error)")
             return ["Unknown error!"]
 
         # Register memory tools 
@@ -154,7 +160,12 @@ class QdrantMCPServer(FastMCP):
                 "For current sensor or device values, use the Home Assistant entity API/tool, not this memory tool."
             ),
         )
-        logging.info("[mcp_server.py] Registered 'memory_query' and 'memory_upsert' tools.")
+        self.add_tool(
+            dummy_adapter,
+            name="dummy_tool",
+            description="A dummy tool for testing connectivity and latency. Always returns instantly.",
+        )
+        logging.info("[mcp_server.py] Registered 'memory_query', 'memory_upsert' and 'dummy_tool' tools.")
         # FastAPI router and endpoints removed: not needed in MCP stdio/sse mode
 
     async def initialize_server(self):
@@ -179,6 +190,12 @@ class QdrantMCPServer(FastMCP):
         # --- Memory tools registration ---
         from .memory import memory_query, memory_upsert
 
+        async def dummy_adapter(ctx: Context, *args, **kwargs) -> List[str]:
+            logger = logging.getLogger(__name__)
+            logger.info("[mcp_server.py] DUMMY ADAPTER called with args=%s kwargs=%s", args, kwargs)
+            await ctx.debug("DUMMY ADAPTER called")
+            return [f"Dummy adapter response at {datetime.datetime.utcnow().isoformat()} UTC"]
+
         async def memory_query_adapter(
             ctx: Context,
             query: str,
@@ -187,8 +204,8 @@ class QdrantMCPServer(FastMCP):
             user_id: Optional[str] = None,
         ) -> List[str]:
             logger = logging.getLogger(__name__)
-            logger.info(f"[mcp_server.py] memory_query_adapter called with query='{query}', top_k={top_k}, collection_name={collection_name}")
-            await ctx.debug(f"Searching for query '{query}' in collection {collection_name or 'default'}")
+            logger.info(f"[mcp_server.py] memory_query_adapter START: query='{query}', top_k={top_k}, collection_name={collection_name}, user_id={user_id}")
+            await ctx.debug(f"memory_query_adapter START: query='{query}', top_k={top_k}, collection_name={collection_name}, user_id={user_id}")
             if collection_name is None:
                 collection_name = "default"
             try:
@@ -209,6 +226,7 @@ class QdrantMCPServer(FastMCP):
 
                 if not entries:
                     logger.info(f"[mcp_server.py] No entries found for query '{query}'")
+                    logger.info("[mcp_server.py] memory_query_adapter END (no entries)")
                     return [f"No information found for the query '{query}'"]
 
                 response = [
@@ -218,12 +236,15 @@ class QdrantMCPServer(FastMCP):
                     for entry in entries
                 ]
                 logger.info(f"[mcp_server.py] Returning response with {len(response)} items")
-                return response
+                logger.info("[mcp_server.py] memory_query_adapter END (success)")
+                return  response
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.exception(f"[mcp_server.py] Exception in memory_query_adapter: {str(e)}")
+                logger.info("[mcp_server.py] memory_query_adapter END (exception)")
                 return [f"Error searching for '{query}': {str(e)}"]
             # extra safety
+            logger.info("[mcp_server.py] memory_query_adapter END (unknown error)")
             return ["Unknown error!"]
 
         async def memory_upsert_adapter(
@@ -233,27 +254,23 @@ class QdrantMCPServer(FastMCP):
             metadata: Optional[dict] = None,
             id: Optional[str] = None,
         ) -> List[str]:
-            """
-            Store information in the memory database.
-            :param ctx: The context for the request.
-            :param content: The content to store.
-            :param collection_name: The collection to store in. Defaults to "default".
-            :param metadata: Optional metadata to attach to the content.
-            :param id: Optional ID to assign to the content.
-            :return: A confirmation message as a list of strings.
-            """
-            await ctx.debug(f"Storing content in collection {collection_name or 'default'}")
+            logger = logging.getLogger(__name__)
+            logger.info(f"[mcp_server.py] memory_upsert_adapter START: content='{content}', collection_name={collection_name}, metadata={metadata}, id={id}")
+            await ctx.debug(f"memory_upsert_adapter START: content='{content}', collection_name={collection_name}, metadata={metadata}, id={id}")
             if collection_name is None:
                 collection_name = "default"
             try:
                 result = await memory_upsert(content, collection_name=collection_name, metadata=metadata, id=id)
                 ts = result["metadata"].get("timestamp", "-")
+                logger.info(f"[mcp_server.py] memory_upsert_adapter END (success): stored in '{collection_name}' ts={ts}")
                 return [f"Successfully stored in collection '{collection_name}': '{content}' (timestamp: {ts})"]
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.exception("[mcp_server.py] Exception in memory_upsert_adapter")
+                logger.info("[mcp_server.py] memory_upsert_adapter END (exception)")
                 return [f"An error occurred: {str(e)}"]
             # extra safety
+            logger.info("[mcp_server.py] memory_upsert_adapter END (unknown error)")
             return ["Unknown error!"]
 
         # Register memory tools 
@@ -277,5 +294,10 @@ class QdrantMCPServer(FastMCP):
                 "For current sensor or device values, use the Home Assistant entity API/tool, not this memory tool."
             ),
         )
-        logging.info("[mcp_server.py] Registered 'memory_query' and 'memory_upsert' tools.")
+        self.add_tool(
+            dummy_adapter,
+            name="dummy_tool",
+            description="A dummy tool for testing connectivity and latency. Always returns instantly.",
+        )
+        logging.info("[mcp_server.py] Registered 'memory_query', 'memory_upsert' and 'dummy_tool' tools.")
         # FastAPI router and endpoints removed: not needed in MCP stdio/sse mode
