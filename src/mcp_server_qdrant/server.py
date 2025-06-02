@@ -28,5 +28,5 @@ else:
         embedding_provider_settings=EmbeddingProviderSettings(),
     )
 
-app = mcp.app
+app = mcp
 
